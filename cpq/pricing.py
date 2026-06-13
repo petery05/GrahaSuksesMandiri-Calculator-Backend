@@ -37,6 +37,53 @@ class PricingContext:
     service: dict      # {assembly_per_opening, logistics_flat, install_per_day, units_per_install_day}
 
 
+def _loc(item, lang):
+    """Localized display name for a catalog item."""
+    return item['name_id'] if lang == 'id' else item['name_en']
+
+
+def _kg_parts(prod, ctx, finish, perimeter, lang):
+    """Profile + auto-kit parts for a weight-priced (per-kg) partner."""
+    rate = ctx.partner['rate_per_kg']
+    prof_kg = perimeter * prod['kg_per_m']
+    parts = [{
+        'key': 'profiles',
+        'name': 'Profil aluminium — rangka & daun' if lang == 'id' else 'Aluminum profiles — frame & sash',
+        'basis': fmt_kg(prof_kg) + ' × ' + fmt_idr(rate) + '/kg',
+        'price': prof_kg * rate * finish['factor'],
+        'auto': False,
+    }]
+    for code in prod['kit']:
+        lib = ctx.kit[code]
+        kg = lib['kg_per_m'] * perimeter
+        parts.append({
+            'key': code, 'name': _loc(lib, lang),
+            'basis': fmt_kg(kg) + ' × ' + fmt_idr(rate) + '/kg',
+            'price': kg * rate, 'auto': True,
+        })
+    return parts
+
+
+def _unit_parts(prod, ctx, finish, lang):
+    """Profile + auto-kit parts for a per-unit partner."""
+    unit_price = prod['unit_price']
+    parts = [{
+        'key': 'profiles',
+        'name': 'Rangka & daun (set pabrik)' if lang == 'id' else 'Frame & sash (factory set)',
+        'basis': '1 unit × ' + fmt_idr(unit_price),
+        'price': unit_price * finish['factor'],
+        'auto': False,
+    }]
+    for code in prod['kit']:
+        lib = ctx.kit[code]
+        parts.append({
+            'key': code, 'name': _loc(lib, lang),
+            'basis': '1 set × ' + fmt_idr(lib['unit_price']),
+            'price': lib['unit_price'], 'auto': True,
+        })
+    return parts
+
+
 def compute_line(line, ctx, lang):
     """Price a single configured opening. Mirrors prototype computeLine()."""
     prod = ctx.products[line['product']]
@@ -47,47 +94,16 @@ def compute_line(line, ctx, lang):
     qty = int(line['qty'])
     perimeter = 2 * (w + h) / 1000   # m
     area = (w * h) / 1e6             # m²
-    parts = []
 
     if ctx.partner['basis'] == 'kg':
-        rate = ctx.partner['rate_per_kg']
-        prof_kg = perimeter * prod['kg_per_m']
-        parts.append({
-            'key': 'profiles',
-            'name': 'Profil aluminium — rangka & daun' if lang == 'id' else 'Aluminum profiles — frame & sash',
-            'basis': fmt_kg(prof_kg) + ' × ' + fmt_idr(rate) + '/kg',
-            'price': prof_kg * rate * finish['factor'],
-            'auto': False,
-        })
-        for code in prod['kit']:
-            lib = ctx.kit[code]
-            kg = lib['kg_per_m'] * perimeter
-            parts.append({
-                'key': code, 'name': lib['name_id'] if lang == 'id' else lib['name_en'],
-                'basis': fmt_kg(kg) + ' × ' + fmt_idr(rate) + '/kg',
-                'price': kg * rate, 'auto': True,
-            })
+        parts = _kg_parts(prod, ctx, finish, perimeter, lang)
     else:
-        unit_price = prod['unit_price']
-        parts.append({
-            'key': 'profiles',
-            'name': 'Rangka & daun (set pabrik)' if lang == 'id' else 'Frame & sash (factory set)',
-            'basis': '1 unit × ' + fmt_idr(unit_price),
-            'price': unit_price * finish['factor'],
-            'auto': False,
-        })
-        for code in prod['kit']:
-            lib = ctx.kit[code]
-            parts.append({
-                'key': code, 'name': lib['name_id'] if lang == 'id' else lib['name_en'],
-                'basis': '1 set × ' + fmt_idr(lib['unit_price']),
-                'price': lib['unit_price'], 'auto': True,
-            })
+        parts = _unit_parts(prod, ctx, finish, lang)
 
     glass_area = area * prod['glass_factor']
     parts.append({
         'key': 'glass',
-        'name': glass['name_id'] if lang == 'id' else glass['name_en'],
+        'name': _loc(glass, lang),
         'basis': f'{glass_area:.2f}'.replace('.', ',') + ' m² × ' + fmt_idr(glass['rate']) + '/m²',
         'price': glass_area * glass['rate'],
         'auto': False,
