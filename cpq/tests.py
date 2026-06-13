@@ -62,6 +62,9 @@ class AuthTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('seed_data')
+        # seed_data only creates the demo user under DEBUG; tests run with
+        # DEBUG=False, so create the login fixture explicitly.
+        get_user_model().objects.create_user('sales', password='salesdemo123')
 
     def test_quotes_require_authentication(self):
         resp = self.client.get('/api/quotes/')
@@ -78,12 +81,16 @@ class AuthTests(APITestCase):
         resp = self.client.post('/api/auth/login/', {'username': 'sales', 'password': 'wrong'})
         self.assertEqual(resp.status_code, 400)
 
+    def test_catalog_requires_authentication(self):
+        resp = self.client.get('/api/catalog/')
+        self.assertIn(resp.status_code, (401, 403))
+
 
 class QuoteSnapshotTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('seed_data')
-        cls.user = get_user_model().objects.get(username='sales')
+        cls.user = get_user_model().objects.create_user('sales', password='salesdemo123')
 
     def setUp(self):
         self.client.force_authenticate(self.user)

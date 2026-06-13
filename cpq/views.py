@@ -61,7 +61,7 @@ def logout_view(request):
 
 # ---------- catalog ----------
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def catalog(request):
     return Response({
         'partners': PartnerSerializer(Partner.objects.all(), many=True).data,
@@ -74,7 +74,7 @@ def catalog(request):
 
 # ---------- pricing ----------
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def compute(request):
     serializer = ComputeInputSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)

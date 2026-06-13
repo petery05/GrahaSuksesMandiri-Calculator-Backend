@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from . import pricing
 from .models import (Finish, GlassType, KitComponent, Partner, Product,
-                     ProductKit, Quote, QuoteLine, ServiceRates)
+                     Quote, QuoteLine, ServiceRates)
 
 VALIDITY_DAYS = 14
 
@@ -96,6 +96,9 @@ def compute_for_partner(partner, lines, margin_pct, lang='id'):
         'code': partner.code, 'name': partner.name, 'basis': partner.basis,
         'price_list_version': price_list.version, 'is_current': price_list.is_current,
     }
+    # Service rates the totals were derived from, so the UI can show the bases
+    # (e.g. "6 × Rp 350.000") without re-deriving prices client-side.
+    result['rates'] = dict(ctx.service)
     return result
 
 
