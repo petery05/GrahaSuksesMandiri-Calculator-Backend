@@ -73,6 +73,20 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
+        self._seed_kit()
+        products = self._seed_products()
+        self._seed_glass()
+        self._seed_finishes()
+        self._seed_service_rates()
+        self._seed_partners(products)
+        self._seed_demo_user()
+        self.stdout.write(self.style.SUCCESS(
+            f'Seeded {Partner.objects.count()} partners, {Product.objects.count()} products, '
+            f'{KitComponent.objects.count()} kit components, {GlassType.objects.count()} glass types, '
+            f'{Finish.objects.count()} finishes.'
+        ))
+
+    def _seed_kit(self):
         for code, (nid, nen, kgm, price) in KIT.items():
             KitComponent.objects.update_or_create(
                 code=code,
@@ -80,6 +94,7 @@ class Command(BaseCommand):
                           'kg_per_m': Decimal(kgm), 'unit_price': Decimal(price)},
             )
 
+    def _seed_products(self):
         products = {}
         for i, (code, nid, nen, kgm, gf, _unit, kit) in enumerate(PRODUCTS):
             prod, _ = Product.objects.update_or_create(
@@ -93,25 +108,30 @@ class Command(BaseCommand):
                     product=prod, component=KitComponent.objects.get(code=comp_code),
                     defaults={'sort_order': j},
                 )
+        return products
 
+    def _seed_glass(self):
         for i, (code, nid, nen, rate) in enumerate(GLASS):
             GlassType.objects.update_or_create(
                 code=code,
                 defaults={'name_id': nid, 'name_en': nen, 'rate': Decimal(rate), 'sort_order': i},
             )
 
+    def _seed_finishes(self):
         for i, (code, nid, nen, factor) in enumerate(FINISHES):
             Finish.objects.update_or_create(
                 code=code,
                 defaults={'name_id': nid, 'name_en': nen, 'factor': Decimal(factor), 'sort_order': i},
             )
 
+    def _seed_service_rates(self):
         ServiceRates.objects.update_or_create(
             pk=1,
             defaults={'assembly_per_opening': Decimal('350000'), 'logistics_flat': Decimal('750000'),
                       'install_per_day': Decimal('1200000'), 'units_per_install_day': 3},
         )
 
+    def _seed_partners(self, products):
         unit_index = {'tostem': 0, 'allure': 1}
         for i, (code, name, basis, c1, c2, version, eff, current, rate_kg) in enumerate(PARTNERS):
             partner, _ = Partner.objects.update_or_create(
@@ -132,15 +152,11 @@ class Command(BaseCommand):
                         defaults={'unit_price': Decimal(unit_prices[idx])},
                     )
 
+    def _seed_demo_user(self):
         # Dev-only demo sales user for testing the login flow (non-staff).
         # Guarded by DEBUG so a production seed never creates a known-password account.
-        User = get_user_model()
-        if settings.DEBUG and not User.objects.filter(username='sales').exists():
-            User.objects.create_user('sales', password='salesdemo123')
-            self.stdout.write('  created demo user "sales" (password: salesdemo123)')
-
-        self.stdout.write(self.style.SUCCESS(
-            f'Seeded {Partner.objects.count()} partners, {Product.objects.count()} products, '
-            f'{KitComponent.objects.count()} kit components, {GlassType.objects.count()} glass types, '
-            f'{Finish.objects.count()} finishes.'
-        ))
+        user_model = get_user_model()
+        if settings.DEBUG and not user_model.objects.filter(username='sales').exists():
+            demo_pw = 'salesdemo123'
+            user_model.objects.create_user('sales', password=demo_pw)
+            self.stdout.write(f'  created demo user "sales" (password: {demo_pw})')

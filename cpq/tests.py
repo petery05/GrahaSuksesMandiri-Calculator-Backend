@@ -25,6 +25,10 @@ EXPECTED = {
     'grand_total': 22789047,
 }
 
+# Demo login fixture — test-only, not a real credential.
+DEMO_USER = 'sales'
+DEMO_PW = 'salesdemo123'
+
 
 class PricingEngineTests(APITestCase):
     @classmethod
@@ -64,21 +68,21 @@ class AuthTests(APITestCase):
         call_command('seed_data')
         # seed_data only creates the demo user under DEBUG; tests run with
         # DEBUG=False, so create the login fixture explicitly.
-        get_user_model().objects.create_user('sales', password='salesdemo123')
+        get_user_model().objects.create_user(DEMO_USER, password=DEMO_PW)
 
     def test_quotes_require_authentication(self):
         resp = self.client.get('/api/quotes/')
         self.assertIn(resp.status_code, (401, 403))
 
     def test_login_then_me(self):
-        resp = self.client.post('/api/auth/login/', {'username': 'sales', 'password': 'salesdemo123'})
+        resp = self.client.post('/api/auth/login/', {'username': DEMO_USER, 'password': DEMO_PW})
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(resp.data['authenticated'])
         me = self.client.get('/api/auth/me/')
-        self.assertEqual(me.data['user']['username'], 'sales')
+        self.assertEqual(me.data['user']['username'], DEMO_USER)
 
     def test_bad_login_rejected(self):
-        resp = self.client.post('/api/auth/login/', {'username': 'sales', 'password': 'wrong'})
+        resp = self.client.post('/api/auth/login/', {'username': DEMO_USER, 'password': 'wrong'})
         self.assertEqual(resp.status_code, 400)
 
     def test_catalog_requires_authentication(self):
@@ -90,7 +94,7 @@ class QuoteSnapshotTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('seed_data')
-        cls.user = get_user_model().objects.create_user('sales', password='salesdemo123')
+        cls.user = get_user_model().objects.create_user(DEMO_USER, password=DEMO_PW)
 
     def setUp(self):
         self.client.force_authenticate(self.user)
@@ -130,7 +134,7 @@ class QuoteSnapshotTests(APITestCase):
 
     def test_quotes_are_scoped_to_owner(self):
         self.client.post('/api/quotes/', self._payload(), format='json')
-        other = get_user_model().objects.create_user('other', password='x')
+        other = get_user_model().objects.create_user('other', password=DEMO_PW)
         self.client.force_authenticate(other)
         resp = self.client.get('/api/quotes/')
         self.assertEqual(len(resp.data), 0)

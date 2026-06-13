@@ -173,10 +173,10 @@ class ServiceRates(models.Model):
 
     class Meta:
         verbose_name = 'Service rates'
-        verbose_name_plural = 'Service rates'
+        verbose_name_plural = verbose_name  # singleton — singular and plural read the same
 
     def __str__(self):
-        return 'Service rates'
+        return self._meta.verbose_name
 
     def save(self, *args, **kwargs):
         self.pk = 1
