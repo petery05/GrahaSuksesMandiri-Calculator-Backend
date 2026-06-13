@@ -1,8 +1,18 @@
 from django.contrib import admin
 
-from .models import (Finish, GlassType, KitComponent, Partner, PriceList,
-                     Product, ProductKit, ProductUnitPrice, Quote, QuoteLine,
-                     ServiceRates)
+from .models import (
+    Finish,
+    GlassType,
+    KitComponent,
+    Partner,
+    PriceList,
+    Product,
+    ProductKit,
+    ProductUnitPrice,
+    Quote,
+    QuoteLine,
+    ServiceRates,
+)
 
 
 class ProductUnitPriceInline(admin.TabularInline):
