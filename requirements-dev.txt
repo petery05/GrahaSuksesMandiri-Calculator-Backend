@@ -1,0 +1,2 @@
+# Dev / CI-only tooling (not required at runtime).
+ruff==0.15.17

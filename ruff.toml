@@ -1,0 +1,9 @@
+# Ruff configuration — https://docs.astral.sh/ruff/
+line-length = 120
+target-version = "py312"
+# Migrations are auto-generated; don't lint them.
+extend-exclude = ["**/migrations/**"]
+
+[lint]
+# pycodestyle errors/warnings, pyflakes, import sorting, bugbear.
+select = ["E", "F", "I", "W", "B"]

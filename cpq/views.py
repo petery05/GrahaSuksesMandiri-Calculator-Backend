@@ -9,10 +9,15 @@ from rest_framework.response import Response
 
 from . import services
 from .models import Finish, GlassType, Partner, Product, Quote
-from .serializers import (ComputeInputSerializer, FinishSerializer,
-                          GlassSerializer, PartnerSerializer,
-                          ProductSerializer, QuoteReadSerializer,
-                          QuoteWriteSerializer)
+from .serializers import (
+    ComputeInputSerializer,
+    FinishSerializer,
+    GlassSerializer,
+    PartnerSerializer,
+    ProductSerializer,
+    QuoteReadSerializer,
+    QuoteWriteSerializer,
+)
 
 
 @api_view(['GET'])
