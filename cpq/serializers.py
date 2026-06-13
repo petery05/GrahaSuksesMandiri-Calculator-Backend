@@ -118,9 +118,9 @@ class QuoteWriteSerializer(ComputeInputSerializer):
 def _validate_line_codes(lines):
     if not lines:
         raise serializers.ValidationError('At least one line is required.')
-    products = {l['product'] for l in lines}
-    glasses = {l['glass'] for l in lines}
-    finishes = {l['finish'] for l in lines}
+    products = {ln['product'] for ln in lines}
+    glasses = {ln['glass'] for ln in lines}
+    finishes = {ln['finish'] for ln in lines}
     known_products = set(Product.objects.filter(code__in=products).values_list('code', flat=True))
     known_glass = set(GlassType.objects.filter(code__in=glasses).values_list('code', flat=True))
     known_finish = set(Finish.objects.filter(code__in=finishes).values_list('code', flat=True))

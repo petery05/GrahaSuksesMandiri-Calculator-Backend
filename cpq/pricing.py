@@ -111,11 +111,11 @@ def compute_line(line, ctx, lang):
 
 def compute_quote(quote, ctx, lang):
     """Aggregate a full quote. Mirrors prototype computeQuote()."""
-    lines = [compute_line(l, ctx, lang) for l in quote['lines']]
+    lines = [compute_line(ln, ctx, lang) for ln in quote['lines']]
     has_lines = len(lines) > 0
-    total_qty = sum(int(l['qty']) for l in quote['lines'])
-    materials = sum((l['per_unit'] - l['small_parts_per_unit']) * l['qty'] for l in lines)
-    small_parts = sum(l['small_parts_per_unit'] * l['qty'] for l in lines)
+    total_qty = sum(int(ln['qty']) for ln in quote['lines'])
+    materials = sum((ln['per_unit'] - ln['small_parts_per_unit']) * ln['qty'] for ln in lines)
+    small_parts = sum(ln['small_parts_per_unit'] * ln['qty'] for ln in lines)
     sr = ctx.service
     assembly = total_qty * sr['assembly_per_opening']
     logistics = sr['logistics_flat'] if has_lines else 0.0

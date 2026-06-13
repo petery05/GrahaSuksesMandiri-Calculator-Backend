@@ -12,8 +12,17 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from cpq.models import (Finish, GlassType, KitComponent, Partner, PriceList,
-                        Product, ProductKit, ProductUnitPrice, ServiceRates)
+from cpq.models import (
+    Finish,
+    GlassType,
+    KitComponent,
+    Partner,
+    PriceList,
+    Product,
+    ProductKit,
+    ProductUnitPrice,
+    ServiceRates,
+)
 
 KIT = {
     'rollers':  ('Set roda & rel', 'Rollers & track set', '0.22', '320000'),

@@ -11,8 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from . import pricing
-from .models import (Finish, GlassType, KitComponent, Partner, Product,
-                     Quote, QuoteLine, ServiceRates)
+from .models import Finish, GlassType, KitComponent, Partner, Product, Quote, QuoteLine, ServiceRates
 
 VALIDITY_DAYS = 14
 
@@ -90,7 +89,7 @@ def compute_for_partner(partner, lines, margin_pct, lang='id'):
     price_list = resolve_price_list(partner)
     if price_list is None:
         raise ValueError('Partner has no price list')
-    ctx = build_context(partner, price_list, products={l['product'] for l in lines} or None)
+    ctx = build_context(partner, price_list, products={ln['product'] for ln in lines} or None)
     result = pricing.compute_quote({'lines': lines, 'margin_pct': margin_pct}, ctx, lang)
     result['partner'] = {
         'code': partner.code, 'name': partner.name, 'basis': partner.basis,
@@ -115,7 +114,7 @@ def persist_quote(owner, data):
         raise ValueError('Partner has no price list')
 
     lines_in = data['lines']
-    ctx = build_context(partner, price_list, products={l['product'] for l in lines_in} or None)
+    ctx = build_context(partner, price_list, products={ln['product'] for ln in lines_in} or None)
     computed = pricing.compute_quote(
         {'lines': lines_in, 'margin_pct': data['margin_pct']}, ctx, data.get('lang', 'id'),
     )
@@ -143,9 +142,9 @@ def persist_quote(owner, data):
         valid_until=today + timedelta(days=VALIDITY_DAYS),
     )
 
-    product_ids = {p.code: p.id for p in Product.objects.filter(code__in={l['product'] for l in lines_in})}
-    glass_ids = {g.code: g.id for g in GlassType.objects.filter(code__in={l['glass'] for l in lines_in})}
-    finish_ids = {f.code: f.id for f in Finish.objects.filter(code__in={l['finish'] for l in lines_in})}
+    product_ids = {p.code: p.id for p in Product.objects.filter(code__in={ln['product'] for ln in lines_in})}
+    glass_ids = {g.code: g.id for g in GlassType.objects.filter(code__in={ln['glass'] for ln in lines_in})}
+    finish_ids = {f.code: f.id for f in Finish.objects.filter(code__in={ln['finish'] for ln in lines_in})}
 
     QuoteLine.objects.bulk_create([
         QuoteLine(
